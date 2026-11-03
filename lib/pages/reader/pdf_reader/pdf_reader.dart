@@ -1,3 +1,6 @@
+import 'package:kover/features/notes/reader_notes.dart';
+import 'package:kover/generated/l10n/app_localizations.dart';
+
 import 'dart:math';
 
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -134,6 +137,61 @@ class PdfReader extends HookConsumerWidget {
                 sourceName: chapterId.toString(),
                 initialPageNumber: data.reader.initialPage + 1,
                 params: PdfViewerParams(
+                  buildContextMenu: (context, params) {
+                    final selection = params.textSelectionDelegate;
+                    return AdaptiveTextSelectionToolbar.buttonItems(
+                      anchors: TextSelectionToolbarAnchors(
+                        primaryAnchor: params.anchorA,
+                        secondaryAnchor: params.anchorB,
+                      ),
+                      buttonItems: [
+                        if (selection.isCopyAllowed &&
+                            selection.hasSelectedText) ...[
+                          ContextMenuButtonItem(
+                            type: ContextMenuButtonType.copy,
+                            onPressed: () => selection.copyTextSelection(),
+                          ),
+                          ContextMenuButtonItem(
+                            label: AppLocalizations.of(context).notesAdd,
+                            onPressed: () async {
+                              try {
+                                final quote = await selection.getSelectedText();
+                                params.dismissContextMenu();
+                                if (!context.mounted || quote.trim().isEmpty) {
+                                  return;
+                                }
+                                await createReaderNote(
+                                  context,
+                                  ref,
+                                  seriesId: seriesId,
+                                  chapterId: chapterId,
+                                  readingListId: readingListId,
+                                  page: (controller.pageNumber ?? 1) - 1,
+                                  quote: quote,
+                                );
+                              } catch (_) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(context).notesError,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                        if (params.isTextSelectionEnabled &&
+                            !selection.isSelectingAllText)
+                          ContextMenuButtonItem(
+                            type: ContextMenuButtonType.selectAll,
+                            onPressed: () => selection.selectAllText(),
+                          ),
+                      ],
+                    );
+                  },
                   scrollPhysics: scrollPhysics,
                   panAxis:
                       data.settings.lockHorizontalPan &&
@@ -265,10 +323,7 @@ class _PdfExtraControls extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            controller.setZoom(
-              controller.centerPosition,
-              defaultZoom.value,
-            );
+            controller.setZoom(controller.centerPosition, defaultZoom.value);
           },
           icon: const Icon(KoverIcons.zoomReset),
         ),

@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:kover/features/notes/reader_notes.dart';
+import 'package:kover/generated/l10n/app_localizations.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kover/mapping/enums/read_direction.dart';
@@ -36,18 +40,13 @@ class EpubReader extends HookConsumerWidget {
       readingListId: readingListId,
     );
 
-    final model = ref.watch(
-      epubReaderProvider(seriesId: seriesId),
-    );
+    final model = ref.watch(epubReaderProvider(seriesId: seriesId));
     final ignoreSafeAreas = ref.watch(
-      epubReaderSettingsProvider(
-        seriesId: seriesId,
-      ).select((state) => state.value?.ignoreSafeAreas ?? true),
+      epubReaderSettingsProvider(seriesId: seriesId)
+          .select((state) => state.value?.ignoreSafeAreas ?? true),
     );
     final verticalMargin = ref.watch(
-      epubReaderSettingsProvider(
-        seriesId: seriesId,
-      ).select(
+      epubReaderSettingsProvider(seriesId: seriesId).select(
         (state) =>
             state.value?.verticalMarginSize ?? LayoutConstants.mediumPadding,
       ),
@@ -84,10 +83,7 @@ class EpubReader extends HookConsumerWidget {
                   initialPage: navState.page,
                 );
 
-                ref.listen(nav, (
-                  previous,
-                  next,
-                ) async {
+                ref.listen(nav, (previous, next) async {
                   next.whenData((next) async {
                     final previousPage = previous?.value?.page;
                     final nextPage = next.page;
@@ -176,9 +172,7 @@ class EpubReader extends HookConsumerWidget {
                       ),
                     ),
                     if (!navState.ready)
-                      const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      const Center(child: CircularProgressIndicator()),
                   ],
                 );
               },
@@ -257,6 +251,7 @@ class _Page extends HookConsumerWidget {
       [],
     );
     final lastViewport = useRef<(Size, double)?>(null);
+    final selectedText = useRef('');
     final vertical = mode == .vertical;
     final spreads = mode == .spreads;
 
@@ -288,10 +283,7 @@ class _Page extends HookConsumerWidget {
                 isVisiblePage || (visibleReady && isAdjacentPage);
 
             final viewport = spreads
-                ? Size(
-                    constraints.maxWidth / 2,
-                    constraints.maxHeight,
-                  )
+                ? Size(constraints.maxWidth / 2, constraints.maxHeight)
                 : constraints.biggest;
             final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
 
@@ -329,7 +321,34 @@ class _Page extends HookConsumerWidget {
             }
 
             return SelectionArea(
+              contextMenuBuilder: (context, selectionState) =>
+                  AdaptiveTextSelectionToolbar.buttonItems(
+                    anchors: selectionState.contextMenuAnchors,
+                    buttonItems: [
+                      ...selectionState.contextMenuButtonItems,
+                      ContextMenuButtonItem(
+                        label: AppLocalizations.of(context).notesAdd,
+                        onPressed: () {
+                          final quote = selectedText.value;
+                          selectionState.hideToolbar();
+                          if (quote.trim().isEmpty) return;
+                          unawaited(
+                            createReaderNote(
+                              context,
+                              ref,
+                              seriesId: seriesId,
+                              chapterId: chapterId,
+                              readingListId: readingListId,
+                              page: page,
+                              quote: quote,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
               onSelectionChanged: (selection) {
+                selectedText.value = selection?.plainText ?? '';
                 onSelectionChanged?.call(
                   selection != null && selection.plainText.isNotEmpty,
                 );

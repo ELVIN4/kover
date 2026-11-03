@@ -1,3 +1,4 @@
+import 'package:kover/features/notes/reader_notes.dart';
 import 'package:kover/utils/constants/kover_icons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -34,9 +35,7 @@ class ReaderControls extends HookConsumerWidget {
         seriesId: seriesId,
         chapterId: chapterId,
         readingListId: readingListId,
-      ).select(
-        (state) => state.value?.series.format,
-      ),
+      ).select((state) => state.value?.series.format),
     );
 
     return SafeArea(
@@ -66,6 +65,23 @@ class ReaderControls extends HookConsumerWidget {
                           )
                           .jumpToPage(page),
                     ),
+                  ),
+                  ReaderNotesButton(
+                    seriesId: seriesId,
+                    chapterId: chapterId,
+                    readingListId: readingListId,
+                    page:
+                        ref
+                            .watch(
+                              readerNavigationProvider(
+                                seriesId: seriesId,
+                                chapterId: chapterId,
+                                readingListId: readingListId,
+                              ),
+                            )
+                            .value
+                            ?.currentPage ??
+                        0,
                   ),
                   if (format == .epub)
                     ReaderSettingsButton(
