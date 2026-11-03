@@ -1,3 +1,5 @@
+import 'package:kover/features/notes/notes_settings.dart';
+import 'package:kover/features/notes/app_icon_settings.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kover/generated/l10n/app_localizations.dart';
 import 'package:kover/pages/settings/appearance_settings.dart';
@@ -23,9 +25,7 @@ class SettingsPage extends ConsumerWidget {
       extendBodyBehindAppBar: true,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar.large(
-            title: Text(l.settings),
-          ),
+          SliverAppBar.large(title: Text(l.settings)),
           const SliverSafeArea(
             top: false,
             bottom: false,
@@ -37,6 +37,8 @@ class SettingsPage extends ConsumerWidget {
                     CredentialsSettings(),
                     GeneralSettings(),
                     AppearanceSettings(),
+                    AppIconSettings(),
+                    NotesSettings(),
                     KeybindsSettings(),
                     DataManagementSettings(),
                     VersionLabel(),

@@ -20,6 +20,8 @@ An unofficial cross-platform [Kavita](https://www.kavitareader.com/) client.
 - Library synchronization with support for both streaming chapters, or downloading them for offline reading.
 - ePub, image and PDF readers with support for various reading modes, navigation options and customizations.
 - Reading progress stored locally and automatically synchronized with the server when a connection is available.
+- Local book notes from EPUB/PDF selections, with tags, favorites, search and JSON import/export.
+- Explicit HTTPS webhook export of notes, plus selectable Android launcher icons. See [Reading notes](docs/notes.md).
 - Library browsing with support for filtering, sorting and searching.
 - Built with Flutter with the goal of keeping all platforms supported, i.e. mobile, desktop and (because why not) web.
 
